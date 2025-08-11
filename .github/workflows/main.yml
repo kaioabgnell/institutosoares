@@ -1,0 +1,60 @@
+on:
+  push:
+    branches:
+      - main
+
+name: 🚀 Deploy Laravel + Frontend
+
+jobs:
+  web-deploy:
+    name: 🎉 Deploy Laravel Project
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🚚 Checkout código
+        uses: actions/checkout@v4
+
+      - name: 🛠️ Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: 🛠️ Instalar dependências Node
+        run: npm ci
+
+      - name: 🏗️ Build assets (Vite)
+        run: npm run build
+
+      # (Opcional) instalar dependências PHP se precisar de cache/config
+      # - name: 🧰 Instalar dependências PHP (opcional)
+      #   run: composer install --no-dev --optimize-autoloader
+
+      - name: 📂 Deploy Laravel (exceto public/)
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ftp.institutoelonsoa1.hospedagemdesites.ws
+          username: institutoelonsoa1
+          password: ${{ secrets.ftp_password }}
+          local-dir: ./
+          server-dir: /
+          exclude: |
+            node_modules/**
+            .git/**
+            .github/**
+            vendor/**
+            .env
+
+      - name: 📂 Deploy arquivos públicos (public → public_html)
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ftp.institutoelonsoa1.hospedagemdesites.ws
+          username: institutoelonsoa1
+          password: ${{ secrets.ftp_password }}
+          local-dir: ./public/
+          server-dir: /public_html/
+          exclude: |
+            node_modules/**
+            .git/**
+            .github/**
+            vendor/**
+            .env
